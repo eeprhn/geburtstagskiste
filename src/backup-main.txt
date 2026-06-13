@@ -1,0 +1,77 @@
+import './style.css'
+
+document.querySelector('#app').innerHTML = `
+  <div class="page">
+    <header class="nav">
+      <div class="logo">🎁 Geburtstags<span>kiste</span>.de</div>
+
+      <nav class="menu">
+        <button>So funktioniert's</button>
+        <button>Entdecken</button>
+        <button>Hilfe 💕</button>
+      </nav>
+
+      <button class="codeTopBtn">Code eingeben</button>
+    </header>
+
+    <main class="hero">
+      <section class="formCard">
+        <h2>Erstelle deine Geburtstagskiste 🎉</h2>
+
+        <label>💗 Spitzname</label>
+        <input id="nickname" placeholder="Wie sollen dich deine Freunde nennen?" />
+
+        <label>🎁 Dein Code</label>
+        <input id="code" value="VERA2022" />
+
+        <label>🎨 Geburtstagsthema</label>
+        <select id="theme">
+          <option>Thema auswählen</option>
+          <option>Einhorn</option>
+          <option>Dino</option>
+          <option>Fußball</option>
+          <option>Gaming</option>
+          <option>Tiere</option>
+          <option>Eigenes Thema</option>
+        </select>
+
+        <input id="customTheme" class="hidden" placeholder="Eigenes Thema eintragen" />
+
+        <button id="createBtn" class="mainBtn">Meine Kiste erstellen ✨</button>
+
+        <p id="message">🔒 Nur mit deinem Code können andere deine Kiste finden.</p>
+      </section>
+    </main>
+  </div>
+`
+
+const theme = document.querySelector('#theme')
+const customTheme = document.querySelector('#customTheme')
+const message = document.querySelector('#message')
+
+theme.addEventListener('change', () => {
+  customTheme.classList.toggle('hidden', theme.value !== 'Eigenes Thema')
+})
+
+document.querySelector('#createBtn').addEventListener('click', () => {
+  const nickname = document.querySelector('#nickname').value.trim()
+  const code = document.querySelector('#code').value.trim()
+  const selectedTheme =
+    theme.value === 'Eigenes Thema' ? customTheme.value.trim() : theme.value
+
+  if (!nickname || !code || selectedTheme === 'Thema auswählen') {
+    message.textContent = 'Bitte Spitzname, Code und Thema ausfüllen.'
+    message.className = 'error'
+    return
+  }
+
+  localStorage.setItem('birthdayList', JSON.stringify({
+    nickname,
+    code,
+    theme: selectedTheme,
+    wishes: []
+  }))
+
+  message.textContent = 'Geburtstagskiste wurde erstellt!'
+  message.className = 'success'
+})
