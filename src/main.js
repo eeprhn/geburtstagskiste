@@ -48,16 +48,10 @@ function showHome() {
     <div class="page">
       <section class="hero">
         <div class="heroSearch">
-  <img src="/Profile.png" class="searchIcon" />
-  <input id="navVisitorCode" placeholder="Freunde-Code eingeben" />
-  <button id="navVisitorBtn" class="codeBtn">Freund Geburtstagskiste</button>
-</div>
-
-<div class="heroSearch">
-  <img src="/key.png" class="searchIcon" />
-  <input id="ownerKeyInput" placeholder="Kisten-Schlüssel eingeben" />
-  <button id="ownerOpenBtn" class="codeBtn">Meine Kiste bearbeiten</button>
-</div>
+          <img src="/Friends.png" class="searchIcon" />
+          <input id="navVisitorCode" placeholder="Freunde-Code eingeben" />
+          <button id="navVisitorBtn" class="codeBtn">Freunde-Wunschliste finden</button>
+        </div>
 
         <div class="formCard">
           <h2>Erstelle deine <span class="green">Geburtstagskiste</span></h2>
@@ -103,21 +97,20 @@ function showHome() {
     </div>
   `
 
-  // Open visitor from nav button (reads input if present, otherwise prompts)
- document.querySelector('#ownerOpenBtn').addEventListener('click', () => {
-  const key = document.querySelector('#ownerKeyInput').value.trim()
+  document.querySelector('#navVisitorBtn').addEventListener('click', async () => {
+    const code = document.querySelector('#navVisitorCode').value.trim()
+    if (!code) return alert('Bitte Freunde-Code eingeben')
 
-  if (!key) return alert('Bitte Kisten-Schlüssel eingeben')
+    await loadAll()
 
-  const found = allLists.find(l => makeCode(l.boxKey) === makeCode(key))
+    const found = allLists.find(l => l.visitorCode === makeCode(code))
+    if (!found) return alert('Liste nicht gefunden')
 
-  if (!found) return alert('Keine Kiste mit diesem Schlüssel gefunden')
+    appData = found
+    showVisitor()
+  })
 
-  appData = found
-  showWishList()
-})
-
-   // Create or open existing box
+  // Create or open existing box
 document.querySelector('#createBtn').addEventListener('click', async () => {
   const nickname = document.querySelector('#nickname').value.trim()
   const boxKey = document.querySelector('#boxKey').value.trim()
