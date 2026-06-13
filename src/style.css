@@ -483,3 +483,44 @@ select{
     height: auto;
   }
 }
+
+.shareBox {
+  background: #f8f8f8;
+  padding: 16px;
+  border-radius: 16px;
+  margin-top: 14px;
+}
+
+.shareButtons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+#qrBox {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+#qrBox img {
+  width: 220px;
+  height: 220px;
+  max-width: 100%;
+  border-radius: 12px;
+  background: white;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .shareButtons {
+    flex-direction: column;
+  }
+
+  .shareButtons button,
+  #qrBox a {
+    width: 100%;
+    text-align: center;
+  }
+}

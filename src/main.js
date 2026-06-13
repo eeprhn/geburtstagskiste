@@ -4,6 +4,53 @@ const DATABASE_URL = "https://geburtstagskiste-new-default-rtdb.europe-west1.fir
 
 let allLists = []
 let appData = null
+let restoringHistory = false
+
+function pushAppHistory(view) {
+  if (restoringHistory) return
+
+  const state = { view }
+  if (view !== 'home' && appData?.visitorCode) {
+    state.visitorCode = appData.visitorCode
+  }
+
+  let url = '#/'
+  if (state.visitorCode) {
+    url = `#/${view}/${state.visitorCode}`
+  }
+
+  history.pushState(state, '', url)
+}
+
+function goBack() {
+  history.back()
+}
+
+async function restoreFromHistory(state) {
+  restoringHistory = true
+  try {
+    if (!state || state.view === 'home') {
+      showHome()
+      return
+    }
+
+    await loadAll()
+    const found = allLists.find(l => l.visitorCode === state.visitorCode)
+    if (!found) {
+      showHome()
+      return
+    }
+
+    appData = found
+    if (state.view === 'visitor') {
+      showVisitor({ skipHistory: true })
+    } else {
+      showWishList({ skipHistory: true })
+    }
+  } finally {
+    restoringHistory = false
+  }
+}
 
 async function saveAll() {
   try {
@@ -41,6 +88,10 @@ async function loadAll() {
 
 function makeCode(text) {
   return text.trim().toUpperCase().replace(/\s+/g, '')
+}
+
+function createShareLink() {
+  return `${window.location.origin}/?code=${encodeURIComponent(appData.visitorCode)}`
 }
 
 function showHome() {
@@ -173,7 +224,9 @@ document.querySelector('#createBtn').addEventListener('click', async () => {
   })
 }
 
-function showWishList() {
+function showWishList(options = {}) {
+  if (!options.skipHistory) pushAppHistory('wishlist')
+
   document.querySelector('#app').innerHTML = `
     <div class="page">
       <header class="nav">
@@ -191,12 +244,21 @@ function showWishList() {
         <div style="width:100%;max-width:900px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
             <h2><span class="nameColor">${appData.nickname}s</span> Geburtstagskiste </h2>
-            <button id="backBtn" class="codeBtn">Startseite</button>
+            <button id="backBtn" class="codeBtn">← Zurück</button>
           </div>
 
           <div style="background:white;padding:20px;border-radius:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)">
            <p><strong>Code an Freunde senden:</strong> ${appData.visitorCode}</p>
            <p><strong>🔑 Kisten-Schlüssel:</strong> ${appData.boxKey}</p>
+
+           <div class="shareBox">
+             <p><strong>Teile deine Wunschliste mit Freunden:</strong></p>
+             <div class="shareButtons">
+               <button id="copyShareLinkBtn" class="codeBtn">Link kopieren</button>
+               <button id="showQrBtn" class="codeBtn">QR-Code anzeigen</button>
+             </div>
+             <div id="qrBox"></div>
+           </div>
            </div>
 
           <div style="background:white;padding:20px;border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05);margin-bottom:20px">
@@ -227,8 +289,23 @@ function showWishList() {
     </div>
   `
 
-  // Back to home
-  document.querySelector('#backBtn').addEventListener('click', showHome)
+  document.querySelector('#backBtn').addEventListener('click', goBack)
+
+  document.querySelector('#copyShareLinkBtn').addEventListener('click', () => {
+    const shareLink = createShareLink()
+    navigator.clipboard.writeText(shareLink)
+    alert('Link kopiert')
+  })
+
+  document.querySelector('#showQrBtn').addEventListener('click', () => {
+    const shareLink = createShareLink()
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(shareLink)}`
+    document.querySelector('#qrBox').innerHTML = `
+      <img src="${qrUrl}" alt="QR-Code zur Wunschliste" />
+      <a href="${qrUrl}" download="geburtstagskiste-qr.png" class="codeBtn">QR-Code speichern</a>
+      <p style="font-size:13px;color:#666;word-break:break-all">${shareLink}</p>
+    `
+  })
 
   // Open visitor
   document.querySelector('#openVisitorBtn').addEventListener('click', () => {
@@ -306,7 +383,9 @@ window.deleteWish = function(i) {
   renderWishes()
 }
 
-function showVisitor() {
+function showVisitor(options = {}) {
+  if (!options.skipHistory) pushAppHistory('visitor')
+
   document.querySelector('#app').innerHTML = `
     <div class="page">
       <header class="nav">
@@ -324,7 +403,7 @@ function showVisitor() {
         <div style="width:100%;max-width:900px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
             <h2><span class="nameColor">${appData.nickname}s</span> Wunschliste </h2>
-            <button id="backBtn" class="codeBtn">Startseite</button>
+            <button id="backBtn" class="codeBtn">← Zurück</button>
           </div>
 
           <div style="background:white;padding:20px;border-radius:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)">
@@ -341,8 +420,7 @@ function showVisitor() {
     </div>
   `
 
-  // Back to home
-  document.querySelector('#backBtn').addEventListener('click', showHome)
+  document.querySelector('#backBtn').addEventListener('click', goBack)
 
   // Open visitor
   document.querySelector('#openVisitorBtn').addEventListener('click', () => {
@@ -379,12 +457,28 @@ window.toggleReserve = function(i) {
 }
 
 // Initialize
+history.replaceState({ view: 'home' }, '', '#/')
+window.addEventListener('popstate', (e) => restoreFromHistory(e.state))
+
 showHome()
 
 loadAll()
   .then(() => {
-    console.log("Firebase geladen")
+    const codeFromUrl = new URLSearchParams(window.location.search).get('code')
+
+    if (codeFromUrl) {
+      const found = allLists.find(l => makeCode(l.visitorCode) === makeCode(codeFromUrl))
+
+      if (found) {
+        appData = found
+        showVisitor()
+      } else {
+        alert('Wunschliste aus Link nicht gefunden')
+      }
+    }
+
+    console.log('Firebase geladen')
   })
   .catch((error) => {
-    console.error("Firebase Fehler:", error)
+    console.error('Firebase Fehler:', error)
   })
