@@ -397,3 +397,89 @@ select{
   font-weight: 900;
   color: #00d084;
 }
+
+@media (max-width: 768px) {
+  html,
+  body {
+    width: 100%;
+    min-height: 100%;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  #app,
+  .page {
+    width: 100%;
+    min-height: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .hero {
+    min-height: auto;
+    height: auto;
+    padding: 16px 12px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: visible;
+  }
+
+  .heroSearch {
+    position: static;
+    width: calc(100% - 24px);
+    max-width: 420px;
+    margin: 0 auto 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .heroSearch input {
+    flex: 1 1 140px;
+    width: auto;
+    max-width: 100%;
+  }
+
+  .formCard {
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: calc(100% - 24px);
+    max-width: 420px;
+    margin: 12px auto 24px;
+    padding: 22px 18px;
+    border-radius: 22px;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .formCard h2 {
+    font-size: 24px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  input,
+  select,
+  button {
+    min-height: 48px;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
